@@ -38,6 +38,9 @@
     <StartupObject>ProjFS_SFTP.App</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ProjectedFSLib.Managed, Version=1.1.19156.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64">
+      <HintPath>..\packages\Microsoft.Windows.ProjFS.1.1.19156.1\lib\net461\ProjectedFSLib.Managed.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -89,6 +92,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
