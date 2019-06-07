@@ -23,11 +23,11 @@
         <Label Grid.Row="2" Grid.Column="0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center">Password</Label>
         <Label Grid.Row="3" Grid.Column="0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center">Port</Label>
 
-        <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="30" HorizontalContentAlignment="Left" VerticalContentAlignment="Center"></TextBox>
-        <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="30" HorizontalContentAlignment="Left" VerticalContentAlignment="Center"></TextBox>
-        <PasswordBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="30" HorizontalContentAlignment="Left" VerticalContentAlignment="Center"></PasswordBox>
-        <TextBox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" Height="30" Width="80" HorizontalContentAlignment="Left" VerticalContentAlignment="Center"></TextBox>
+        <TextBox Name="boxHostname" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="30" HorizontalContentAlignment="Left" VerticalContentAlignment="Center"></TextBox>
+        <TextBox Name="boxUsername" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="30" HorizontalContentAlignment="Left" VerticalContentAlignment="Center"></TextBox>
+        <PasswordBox Name="boxPassword" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="30" HorizontalContentAlignment="Left" VerticalContentAlignment="Center"></PasswordBox>
+        <TextBox Name="boxPort" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" Height="30" Width="80" HorizontalContentAlignment="Left" VerticalContentAlignment="Center"></TextBox>
 
-        <Button Grid.Row="5" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="35,15">Virtualize Files</Button>
+        <Button Click="Button_Click" Grid.Row="5" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="35,15">Virtualize Files</Button>
     </Grid>
 </Window>
