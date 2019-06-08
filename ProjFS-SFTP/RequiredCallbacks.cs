@@ -59,9 +59,6 @@ namespace ProjFS_SFTP {
 		}
 
 		public HResult GetFileDataCallback(int commandId, string relativePath, ulong byteOffset, uint length, Guid dataStreamId, byte[] contentId, byte[] providerId, uint triggeringProcessId, string triggeringProcessImageFileName) {
-			if(!string.IsNullOrWhiteSpace(relativePath)) {
-				Console.WriteLine($"Callback | GetFileData \"{relativePath}\"");
-			}
 			return HResult.Ok;
 		}
 
@@ -85,9 +82,6 @@ namespace ProjFS_SFTP {
 		private string GetFullPath(string relativePath) {
 			var combined = Path.Combine(sftpClient.WorkingDirectory, relativePath);
 			var combinedReplaced = combined.Replace('\\', '/');
-			if(!string.IsNullOrWhiteSpace(relativePath)) {
-				Console.WriteLine("test");
-			}
 			return combinedReplaced;
 		}
 
