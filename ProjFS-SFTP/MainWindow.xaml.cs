@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -17,20 +18,26 @@ namespace ProjFS_SFTP {
 
 		private readonly HashAlgorithm hashAlgorithm = SHA256.Create();
 		private readonly ConcurrentDictionary<string, FileProvider> openConnections = new ConcurrentDictionary<string, FileProvider>();
+		private readonly List<string> openInitiations = new List<string>();
 
 		public MainWindow() {
 			InitializeComponent();
 		}
 
-		private void Button_Click(object sender, RoutedEventArgs e) {
+		private async void Button_Click(object sender, RoutedEventArgs e) {
 			var hostname = boxHostname.Text;
 			var username = boxUsername.Text;
 
 			var hash = CreateStringHash(hostname, username);
+			if(openInitiations.Contains(hash)) {
+				MessageBox.Show($"Connection to {username}@{hostname} is already initializing!");
+				return;
+			}
 			if(openConnections.ContainsKey(hash)) {
 				MessageBox.Show($"Connection to {username}@{hostname} already exists!");
 				return;
 			}
+			openInitiations.Add(hash);
 
 			var password = boxPassword.Password;
 			var rootdirName = Path.Combine(Path.GetTempPath(), "ProjFS-SFTP", Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
@@ -45,9 +52,10 @@ namespace ProjFS_SFTP {
 			}
 
 			var fileProvider = new FileProvider(conInfo, rootdirName);
-			if(fileProvider.InitProjection()) {
+			if(await fileProvider.InitProjectionAsync() && fileProvider.StartProjecting()) {
 				openConnections.TryAdd(hash, fileProvider);
 			}
+			openInitiations.Remove(hash);
 		}
 
 		private string CreateStringHash(params string[] strings)

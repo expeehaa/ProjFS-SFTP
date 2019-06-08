@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Windows.ProjFS;
 using Renci.SshNet;
@@ -11,6 +13,7 @@ namespace ProjFS_SFTP {
 
 		private SftpClient SftpClient { get; }
 		private VirtualizationInstance virtualization;
+		private RequiredCallbacks requiredCallbacks;
 
 		public FileProvider(ConnectionInfo conInfo, string virtualizationPath) {
 			ConnectionInfo = conInfo;
@@ -18,15 +21,12 @@ namespace ProjFS_SFTP {
 			SftpClient = new SftpClient(ConnectionInfo);
 		}
 
-		public bool InitProjection() {
+		public async Task<bool> InitProjectionAsync() {
 			Stop();
 
-			try {
-				SftpClient.Connect();
-			} catch(Exception e) {
-				MessageBox.Show($"{e.Message}\n{e.StackTrace}", "Failed to connect");
+			var success = await ConnectSftpAsync();
+			if(!success)
 				return false;
-			}
 
 			SftpRootPath = SftpClient.WorkingDirectory;
 
@@ -39,11 +39,36 @@ namespace ProjFS_SFTP {
 			return true;
 		}
 
+		public bool StartProjecting() {
+			requiredCallbacks = new RequiredCallbacks(this, virtualization, SftpClient);
+			virtualization.OnQueryFileName = requiredCallbacks.QueryFilenameCallback;
+			var hr = virtualization.StartVirtualizing(requiredCallbacks);
+			if(hr == HResult.Ok)
+				Process.Start(VirtualizationPath);
+			return hr == HResult.Ok;
+		}
+
 		public void Stop() {
 			if(!(SftpClient is null) && SftpClient.IsConnected)
 				SftpClient.Disconnect();
 			if(!(virtualization is null))
 				try { virtualization.StopVirtualizing(); } catch {}
+		}
+
+		private async Task<bool> ConnectSftpAsync() {
+			var success = false;
+
+			await Task.Run(() => {
+				try {
+					SftpClient.Connect();
+					success = true;
+				} catch(Exception e) {
+					MessageBox.Show($"{e.Message}\n{e.StackTrace}", "Failed to connect to sftp server");
+					success = false;
+				}
+			});
+			
+			return success;
 		}
 
 		public void Dispose() {
