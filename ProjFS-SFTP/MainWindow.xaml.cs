@@ -40,14 +40,24 @@ namespace ProjFS_SFTP {
 				conInfo = new ConnectionInfo(hostname, username, new PasswordAuthenticationMethod(username, password));
 			} catch(Exception ex) {
 				MessageBox.Show($"Failed to create connection:\n{ex.Message}\n{ex.StackTrace}");
+				new DirectoryInfo(rootdirName).Delete(true);
 				return;
 			}
 
 			var fileProvider = new FileProvider(conInfo, rootdirName);
-			openConnections.TryAdd(hash, fileProvider);
+			if(fileProvider.InitProjection()) {
+				openConnections.TryAdd(hash, fileProvider);
+			}
 		}
 
 		private string CreateStringHash(params string[] strings)
 			=> Encoding.UTF8.GetString(hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(string.Join("", strings))));
+
+		private string GetAndCreateVirtualizationDirectory() {
+			var tempDir = new DirectoryInfo(Path.GetTempPath());
+			var projfsDir = tempDir.CreateSubdirectory("ProjFS-SFTP");
+			var virtDir = projfsDir.CreateSubdirectory(Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
+			return virtDir.FullName;
+		}
 	}
 }
