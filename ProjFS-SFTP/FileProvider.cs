@@ -24,7 +24,7 @@ namespace ProjFS_SFTP {
 			try {
 				SftpClient.Connect();
 			} catch(Exception e) {
-				MessageBox.Show($"Failed to connect:\n{e.Message}\n{e.StackTrace}");
+				MessageBox.Show($"{e.Message}\n{e.StackTrace}", "Failed to connect");
 				return false;
 			}
 
@@ -33,7 +33,7 @@ namespace ProjFS_SFTP {
 			try {
 				virtualization = new VirtualizationInstance(VirtualizationPath, 0, 0, false, new NotificationMapping[0]);
 			} catch(Exception e) {
-				MessageBox.Show($"Failed to create virtualization instance:\n{e.Message}\n{e.StackTrace}");
+				MessageBox.Show($"{e.Message}\n{e.StackTrace}", "Failed to create virtualization instance");
 				return false;
 			}
 			return true;

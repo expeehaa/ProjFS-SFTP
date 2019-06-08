@@ -39,7 +39,7 @@ namespace ProjFS_SFTP {
 			try {
 				conInfo = new ConnectionInfo(hostname, username, new PasswordAuthenticationMethod(username, password));
 			} catch(Exception ex) {
-				MessageBox.Show($"Failed to create connection:\n{ex.Message}\n{ex.StackTrace}");
+				MessageBox.Show($"{ex.Message}\n{ex.StackTrace}", "Failed to create connection");
 				new DirectoryInfo(rootdirName).Delete(true);
 				return;
 			}
