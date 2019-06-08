@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Windows.ProjFS;
 using Renci.SshNet;
@@ -22,17 +21,21 @@ namespace ProjFS_SFTP {
 			SftpClient = new SftpClient(ConnectionInfo);
 		}
 
-		public async Task<bool> InitProjectionAsync() {
+		public bool InitProjection() {
 			Stop();
 
-			var success = await ConnectSftpAsync();
-			if(!success)
+			try {
+				SftpClient.Connect();
+			} catch(Exception e) {
+				MessageBox.Show($"{e.Message}\n{e.StackTrace}", "Failed to connect to sftp server");
 				return false;
+			}
 
 			SftpRootPath = SftpClient.WorkingDirectory;
 
 			try {
 				virtualization = new VirtualizationInstance(VirtualizationDirectory.FullName, 0, 0, false, new NotificationMapping[0]);
+				VirtualizationDirectory.Refresh();
 			} catch(Exception e) {
 				MessageBox.Show($"{e.Message}\n{e.StackTrace}", "Failed to create virtualization instance");
 				return false;
@@ -54,24 +57,10 @@ namespace ProjFS_SFTP {
 				SftpClient.Disconnect();
 			if(!(virtualization is null))
 				try { virtualization.StopVirtualizing(); } catch {}
+
+			VirtualizationDirectory.Refresh();
 			if(VirtualizationDirectory.Exists)
 				VirtualizationDirectory.Delete(true);
-		}
-
-		private async Task<bool> ConnectSftpAsync() {
-			var success = false;
-
-			await Task.Run(() => {
-				try {
-					SftpClient.Connect();
-					success = true;
-				} catch(Exception e) {
-					MessageBox.Show($"{e.Message}\n{e.StackTrace}", "Failed to connect to sftp server");
-					success = false;
-				}
-			});
-			
-			return success;
 		}
 
 		public void Dispose() {
