@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Windows.ProjFS;
@@ -8,16 +9,16 @@ using Renci.SshNet;
 namespace ProjFS_SFTP {
 	public class FileProvider : IDisposable {
 		public ConnectionInfo ConnectionInfo { get; }
-		public string VirtualizationPath { get; }
+		public DirectoryInfo VirtualizationDirectory { get; }
 		public string SftpRootPath { get; private set; }
 
 		private SftpClient SftpClient { get; }
 		private VirtualizationInstance virtualization;
 		private RequiredCallbacks requiredCallbacks;
 
-		public FileProvider(ConnectionInfo conInfo, string virtualizationPath) {
+		public FileProvider(ConnectionInfo conInfo, DirectoryInfo virtualizationDir) {
 			ConnectionInfo = conInfo;
-			VirtualizationPath = virtualizationPath;
+			VirtualizationDirectory = virtualizationDir;
 			SftpClient = new SftpClient(ConnectionInfo);
 		}
 
@@ -31,7 +32,7 @@ namespace ProjFS_SFTP {
 			SftpRootPath = SftpClient.WorkingDirectory;
 
 			try {
-				virtualization = new VirtualizationInstance(VirtualizationPath, 0, 0, false, new NotificationMapping[0]);
+				virtualization = new VirtualizationInstance(VirtualizationDirectory.FullName, 0, 0, false, new NotificationMapping[0]);
 			} catch(Exception e) {
 				MessageBox.Show($"{e.Message}\n{e.StackTrace}", "Failed to create virtualization instance");
 				return false;
@@ -44,7 +45,7 @@ namespace ProjFS_SFTP {
 			virtualization.OnQueryFileName = requiredCallbacks.QueryFilenameCallback;
 			var hr = virtualization.StartVirtualizing(requiredCallbacks);
 			if(hr == HResult.Ok)
-				Process.Start(VirtualizationPath);
+				Process.Start(VirtualizationDirectory.FullName);
 			return hr == HResult.Ok;
 		}
 
@@ -53,6 +54,8 @@ namespace ProjFS_SFTP {
 				SftpClient.Disconnect();
 			if(!(virtualization is null))
 				try { virtualization.StopVirtualizing(); } catch {}
+			if(VirtualizationDirectory.Exists)
+				VirtualizationDirectory.Delete(true);
 		}
 
 		private async Task<bool> ConnectSftpAsync() {

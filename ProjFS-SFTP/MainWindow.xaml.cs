@@ -40,18 +40,17 @@ namespace ProjFS_SFTP {
 			openInitiations.Add(hash);
 
 			var password = boxPassword.Password;
-			var rootdirName = Path.Combine(Path.GetTempPath(), "ProjFS-SFTP", Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
+			var rootDir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "ProjFS-SFTP", Path.GetFileNameWithoutExtension(Path.GetRandomFileName())));
 
 			ConnectionInfo conInfo;
 			try {
 				conInfo = new ConnectionInfo(hostname, username, new PasswordAuthenticationMethod(username, password));
 			} catch(Exception ex) {
 				MessageBox.Show($"{ex.Message}\n{ex.StackTrace}", "Failed to create connection");
-				new DirectoryInfo(rootdirName).Delete(true);
 				return;
 			}
 
-			var fileProvider = new FileProvider(conInfo, rootdirName);
+			var fileProvider = new FileProvider(conInfo, rootDir);
 			if(await fileProvider.InitProjectionAsync() && fileProvider.StartProjecting()) {
 				openConnections.TryAdd(hash, fileProvider);
 			}
@@ -60,12 +59,5 @@ namespace ProjFS_SFTP {
 
 		private string CreateStringHash(params string[] strings)
 			=> Encoding.UTF8.GetString(hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(string.Join("", strings))));
-
-		private string GetAndCreateVirtualizationDirectory() {
-			var tempDir = new DirectoryInfo(Path.GetTempPath());
-			var projfsDir = tempDir.CreateSubdirectory("ProjFS-SFTP");
-			var virtDir = projfsDir.CreateSubdirectory(Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
-			return virtDir.FullName;
-		}
 	}
 }
