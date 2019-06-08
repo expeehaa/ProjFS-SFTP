@@ -26,7 +26,7 @@ namespace ProjFS_SFTP {
 			if(!sftpClient.Exists(GetFullPath(relativePath)))
 				return HResult.PathNotFound;
 
-			var fileEnumerator = sftpClient.ListDirectory(GetFullPath(relativePath)).OrderBy(s => Path.GetFileName(s.FullName)).GetEnumerator();
+			var fileEnumerator = sftpClient.ListDirectory(GetFullPath(relativePath)).OrderBy(s => Path.GetFileName(s.FullName)).ToList().GetEnumerator();
 			_activeEnumerations.TryAdd(enumerationId, fileEnumerator);
 			return HResult.Ok;
 		}
@@ -59,7 +59,37 @@ namespace ProjFS_SFTP {
 		}
 
 		public HResult GetFileDataCallback(int commandId, string relativePath, ulong byteOffset, uint length, Guid dataStreamId, byte[] contentId, byte[] providerId, uint triggeringProcessId, string triggeringProcessImageFileName) {
-			return HResult.Ok;
+			if(string.IsNullOrWhiteSpace(relativePath)) {
+				return HResult.Ok;
+			} else {
+				var fullPath = GetFullPath(relativePath);
+				if(sftpClient.Exists(fullPath)) {
+					var file = sftpClient.Get(fullPath);
+					uint desiredBufferSize = (uint)Math.Min(64*1024, file.Length);
+
+					using(var reader = sftpClient.OpenRead(fullPath)) {
+						using(var writeBuffer = virtualization.CreateWriteBuffer(byteOffset, desiredBufferSize, out var alignedWriteOffset, out var alignedBufferSize)) {
+							while(alignedWriteOffset < (ulong)file.Length) {
+								writeBuffer.Stream.Seek(0, SeekOrigin.Begin);
+								var currentBufferSize = Math.Min(desiredBufferSize, (ulong)file.Length - alignedWriteOffset);
+								var buffer = new byte[currentBufferSize];
+								reader.Read(buffer, 0, (int)currentBufferSize);
+								writeBuffer.Stream.Write(buffer, 0, (int)currentBufferSize);
+
+								var hr = virtualization.WriteFileData(dataStreamId, writeBuffer, alignedWriteOffset, (uint)currentBufferSize);
+								if(hr != HResult.Ok)
+									return HResult.InternalError;
+
+								alignedWriteOffset += (ulong)currentBufferSize;
+							}
+						}
+					}
+
+					return HResult.Ok;
+				} else {
+					return HResult.FileNotFound;
+				}
+			}
 		}
 
 		public HResult GetPlaceholderInfoCallback(int commandId, string relativePath, uint triggeringProcessId, string triggeringProcessImageFileName) {
