@@ -12,8 +12,8 @@ namespace ProjFS_SFTP {
 		public string SftpRootPath { get; private set; }
 
 		private SftpClient SftpClient { get; }
-		private VirtualizationInstance virtualization;
-		private RequiredCallbacks requiredCallbacks;
+		private VirtualizationInstance _virtInstance;
+		private RequiredCallbacks _requiredCallbacks;
 
 		public FileProvider(ConnectionInfo conInfo, DirectoryInfo virtualizationDir) {
 			ConnectionInfo = conInfo;
@@ -34,7 +34,7 @@ namespace ProjFS_SFTP {
 			SftpRootPath = SftpClient.WorkingDirectory;
 
 			try {
-				virtualization = new VirtualizationInstance(VirtualizationDirectory.FullName, 0, 0, false, new NotificationMapping[0]);
+				_virtInstance = new VirtualizationInstance(VirtualizationDirectory.FullName, 0, 0, false, new NotificationMapping[0]);
 				VirtualizationDirectory.Refresh();
 			} catch(Exception e) {
 				MessageBox.Show($"{e.Message}\n{e.StackTrace}", "Failed to create virtualization instance");
@@ -44,9 +44,9 @@ namespace ProjFS_SFTP {
 		}
 
 		public bool StartProjecting() {
-			requiredCallbacks = new RequiredCallbacks(this, virtualization, SftpClient);
-			virtualization.OnQueryFileName = requiredCallbacks.QueryFilenameCallback;
-			var hr = virtualization.StartVirtualizing(requiredCallbacks);
+			_requiredCallbacks = new RequiredCallbacks(this, _virtInstance, SftpClient);
+			_virtInstance.OnQueryFileName = _requiredCallbacks.QueryFilenameCallback;
+			var hr = _virtInstance.StartVirtualizing(_requiredCallbacks);
 			if(hr == HResult.Ok)
 				Process.Start(VirtualizationDirectory.FullName);
 			return hr == HResult.Ok;
@@ -55,8 +55,8 @@ namespace ProjFS_SFTP {
 		public void Stop() {
 			if(!(SftpClient is null) && SftpClient.IsConnected)
 				SftpClient.Disconnect();
-			if(!(virtualization is null))
-				try { virtualization.StopVirtualizing(); } catch { }
+			if(!(_virtInstance is null))
+				try { _virtInstance.StopVirtualizing(); } catch { }
 
 			VirtualizationDirectory.Refresh();
 			if(VirtualizationDirectory.Exists)

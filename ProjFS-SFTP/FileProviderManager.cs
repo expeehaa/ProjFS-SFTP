@@ -10,21 +10,21 @@ using Renci.SshNet;
 
 namespace ProjFS_SFTP {
 	public class FileProviderManager {
-		private static readonly HashAlgorithm hashAlgorithm = SHA256.Create();
-		private static readonly ConcurrentDictionary<string, FileProvider> openConnections = new ConcurrentDictionary<string, FileProvider>();
-		private static readonly List<string> openInitiations = new List<string>();
+		private static readonly HashAlgorithm _hashAlgorithm = SHA256.Create();
+		private static readonly ConcurrentDictionary<string, FileProvider> _openConnections = new ConcurrentDictionary<string, FileProvider>();
+		private static readonly List<string> _openInitiations = new List<string>();
 
 		public static bool CreateFileProvider(string hostname, string username, string password, int port = 22) {
 			var hash = CreateStringHash(hostname, username);
-			if(openInitiations.Contains(hash)) {
+			if(_openInitiations.Contains(hash)) {
 				MessageBox.Show($"Connection to {username}@{hostname} is already initializing!");
 				return false;
 			}
-			if(openConnections.ContainsKey(hash)) {
+			if(_openConnections.ContainsKey(hash)) {
 				MessageBox.Show($"Connection to {username}@{hostname} already exists!");
 				return false;
 			}
-			openInitiations.Add(hash);
+			_openInitiations.Add(hash);
 
 			var rootDir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "ProjFS-SFTP", Path.GetFileNameWithoutExtension(Path.GetRandomFileName())));
 
@@ -39,21 +39,21 @@ namespace ProjFS_SFTP {
 			var fileProvider = new FileProvider(conInfo, rootDir);
 			Task.Run(() => {
 				if(fileProvider.InitProjection() && fileProvider.StartProjecting()) {
-					openConnections.TryAdd(hash, fileProvider);
+					_openConnections.TryAdd(hash, fileProvider);
 				}
-				openInitiations.Remove(hash);
+				_openInitiations.Remove(hash);
 			});
 
 			return true;
 		}
 
 		public static void StopAllFileProviders() {
-			foreach(var provider in openConnections.Values) {
+			foreach(var provider in _openConnections.Values) {
 				provider.Stop();
 			}
 		}
 
 		private static string CreateStringHash(params string[] strings)
-			=> Encoding.UTF8.GetString(hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(string.Join("", strings))));
+			=> Encoding.UTF8.GetString(_hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(string.Join("", strings))));
 	}
 }

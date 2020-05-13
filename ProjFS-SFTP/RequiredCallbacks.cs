@@ -9,24 +9,24 @@ using System.Linq;
 
 namespace ProjFS_SFTP {
 	public class RequiredCallbacks : IRequiredCallbacks {
-		private readonly FileProvider fileProvider;
-		private readonly VirtualizationInstance virtualization;
-		private readonly SftpClient sftpClient;
+		private readonly FileProvider _fileProvider;
+		private readonly VirtualizationInstance _virtInstance;
+		private readonly SftpClient _sftpClient;
 		private ConcurrentDictionary<Guid, IEnumerator<SftpFile>> _activeEnumerations = new ConcurrentDictionary<Guid, IEnumerator<SftpFile>>();
 
 		public RequiredCallbacks(FileProvider provider, VirtualizationInstance virtualization, SftpClient client) {
-			fileProvider = provider;
-			this.virtualization = virtualization;
-			sftpClient = client;
+			_fileProvider = provider;
+			_virtInstance = virtualization;
+			_sftpClient = client;
 		}
 
 		public HResult StartDirectoryEnumerationCallback(int commandId, Guid enumerationId, string relativePath, uint triggeringProcessId, string triggeringProcessImageFileName) {
 			if(_activeEnumerations.ContainsKey(enumerationId))
 				return HResult.InternalError;
-			if(!sftpClient.Exists(GetFullPath(relativePath)))
+			if(!_sftpClient.Exists(GetFullPath(relativePath)))
 				return HResult.PathNotFound;
 
-			var fileEnumerator = sftpClient.ListDirectory(GetFullPath(relativePath)).OrderBy(s => Path.GetFileName(s.FullName)).ToList().GetEnumerator();
+			var fileEnumerator = _sftpClient.ListDirectory(GetFullPath(relativePath)).OrderBy(s => Path.GetFileName(s.FullName)).ToList().GetEnumerator();
 			_activeEnumerations.TryAdd(enumerationId, fileEnumerator);
 			return HResult.Ok;
 		}
@@ -63,12 +63,12 @@ namespace ProjFS_SFTP {
 				return HResult.Ok;
 			} else {
 				var fullPath = GetFullPath(relativePath);
-				if(sftpClient.Exists(fullPath)) {
-					var file = sftpClient.Get(fullPath);
+				if(_sftpClient.Exists(fullPath)) {
+					var file = _sftpClient.Get(fullPath);
 					uint desiredBufferSize = (uint)Math.Min(64*1024, file.Length);
 
-					using var reader      = sftpClient.OpenRead(fullPath);
-					using var writeBuffer = virtualization.CreateWriteBuffer(byteOffset, desiredBufferSize, out var alignedWriteOffset, out var alignedBufferSize);
+					using var reader      = _sftpClient.OpenRead(fullPath);
+					using var writeBuffer = _virtInstance.CreateWriteBuffer(byteOffset, desiredBufferSize, out var alignedWriteOffset, out var alignedBufferSize);
 
 					while(alignedWriteOffset < (ulong)file.Length) {
 						writeBuffer.Stream.Seek(0, SeekOrigin.Begin);
@@ -77,7 +77,7 @@ namespace ProjFS_SFTP {
 						reader.Read(buffer, 0, (int)currentBufferSize);
 						writeBuffer.Stream.Write(buffer, 0, (int)currentBufferSize);
 
-						var hr = virtualization.WriteFileData(dataStreamId, writeBuffer, alignedWriteOffset, (uint)currentBufferSize);
+						var hr = _virtInstance.WriteFileData(dataStreamId, writeBuffer, alignedWriteOffset, (uint)currentBufferSize);
 						if(hr != HResult.Ok)
 							return HResult.InternalError;
 
@@ -93,9 +93,9 @@ namespace ProjFS_SFTP {
 
 		public HResult GetPlaceholderInfoCallback(int commandId, string relativePath, uint triggeringProcessId, string triggeringProcessImageFileName) {
 			var fullPath = GetFullPath(relativePath);
-			if(!string.IsNullOrWhiteSpace(relativePath) && sftpClient.Exists(fullPath)) {
-				var file = sftpClient.Get(fullPath);
-				virtualization.WritePlaceholderInfo(relativePath, file.LastAccessTime, file.LastAccessTime, file.LastWriteTime, file.LastWriteTime, file.IsDirectory ? FileAttributes.Directory : FileAttributes.Normal, file.Length, file.IsDirectory, new byte[] { 0 }, new byte[] { 1 });
+			if(!string.IsNullOrWhiteSpace(relativePath) && _sftpClient.Exists(fullPath)) {
+				var file = _sftpClient.Get(fullPath);
+				_virtInstance.WritePlaceholderInfo(relativePath, file.LastAccessTime, file.LastAccessTime, file.LastWriteTime, file.LastWriteTime, file.IsDirectory ? FileAttributes.Directory : FileAttributes.Normal, file.Length, file.IsDirectory, new byte[] { 0 }, new byte[] { 1 });
 			}
 			return HResult.Ok;
 		}
@@ -103,13 +103,13 @@ namespace ProjFS_SFTP {
 
 		public HResult QueryFilenameCallback(string relativePath) {
 			var fullPath = GetFullPath(relativePath);
-			var hr = sftpClient.Exists(fullPath) && sftpClient.Get(fullPath).IsRegularFile ? HResult.Ok : HResult.FileNotFound;
+			var hr = _sftpClient.Exists(fullPath) && _sftpClient.Get(fullPath).IsRegularFile ? HResult.Ok : HResult.FileNotFound;
 			return hr;
 		}
 
 
 		private string GetFullPath(string relativePath) {
-			var combined = Path.Combine(sftpClient.WorkingDirectory, relativePath);
+			var combined = Path.Combine(_sftpClient.WorkingDirectory, relativePath);
 			var combinedReplaced = combined.Replace('\\', '/');
 			return combinedReplaced;
 		}
