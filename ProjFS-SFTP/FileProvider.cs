@@ -7,7 +7,6 @@ using Renci.SshNet;
 
 namespace ProjFS_SFTP {
 	public class FileProvider : IDisposable {
-		public ConnectionInfo ConnectionInfo { get; }
 		public DirectoryInfo VirtualizationDirectory { get; }
 		public string SftpRootPath { get; private set; }
 
@@ -15,10 +14,9 @@ namespace ProjFS_SFTP {
 		private VirtualizationInstance _virtInstance;
 		private RequiredCallbacks _requiredCallbacks;
 
-		public FileProvider(ConnectionInfo conInfo, DirectoryInfo virtualizationDir) {
-			ConnectionInfo = conInfo;
+		public FileProvider(SftpClient sftpClient, DirectoryInfo virtualizationDir) {
 			VirtualizationDirectory = virtualizationDir;
-			_sftpClient = new SftpClient(ConnectionInfo);
+			_sftpClient = sftpClient;
 		}
 
 		public bool InitProjection() {

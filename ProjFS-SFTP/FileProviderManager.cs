@@ -28,15 +28,15 @@ namespace ProjFS_SFTP {
 
 			var rootDir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "ProjFS-SFTP", Path.GetFileNameWithoutExtension(Path.GetRandomFileName())));
 
-			ConnectionInfo conInfo;
+			SftpClient sftpClient;
 			try {
-				conInfo = new ConnectionInfo(hostname, port, username, new PasswordAuthenticationMethod(username, password));
+				sftpClient = new SftpClient(new ConnectionInfo(hostname, port, username, new PasswordAuthenticationMethod(username, password)));
 			} catch(Exception ex) {
 				MessageBox.Show($"{ex.Message}\n{ex.StackTrace}", "Failed to create connection");
 				return false;
 			}
 
-			var fileProvider = new FileProvider(conInfo, rootDir);
+			var fileProvider = new FileProvider(sftpClient, rootDir);
 			Task.Run(() => {
 				if(fileProvider.InitProjection() && fileProvider.StartProjecting()) {
 					_openConnections.TryAdd(hash, fileProvider);
