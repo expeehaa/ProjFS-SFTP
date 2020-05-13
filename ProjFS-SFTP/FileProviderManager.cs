@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using Renci.SshNet;
 
@@ -37,12 +36,10 @@ namespace ProjFS_SFTP {
 			}
 
 			var fileProvider = new FileProvider(sftpClient, rootDir);
-			Task.Run(() => {
-				if(fileProvider.InitProjection() && fileProvider.StartProjecting()) {
-					_openConnections.TryAdd(hash, fileProvider);
-				}
-				_openInitiations.Remove(hash);
-			});
+			if(fileProvider.InitProjection() && fileProvider.StartProjecting()) {
+				_openConnections.TryAdd(hash, fileProvider);
+			}
+			_openInitiations.Remove(hash);
 
 			return true;
 		}
