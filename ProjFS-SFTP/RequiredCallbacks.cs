@@ -67,22 +67,21 @@ namespace ProjFS_SFTP {
 					var file = sftpClient.Get(fullPath);
 					uint desiredBufferSize = (uint)Math.Min(64*1024, file.Length);
 
-					using(var reader = sftpClient.OpenRead(fullPath)) {
-						using(var writeBuffer = virtualization.CreateWriteBuffer(byteOffset, desiredBufferSize, out var alignedWriteOffset, out var alignedBufferSize)) {
-							while(alignedWriteOffset < (ulong)file.Length) {
-								writeBuffer.Stream.Seek(0, SeekOrigin.Begin);
-								var currentBufferSize = Math.Min(desiredBufferSize, (ulong)file.Length - alignedWriteOffset);
-								var buffer = new byte[currentBufferSize];
-								reader.Read(buffer, 0, (int)currentBufferSize);
-								writeBuffer.Stream.Write(buffer, 0, (int)currentBufferSize);
+					using var reader      = sftpClient.OpenRead(fullPath);
+					using var writeBuffer = virtualization.CreateWriteBuffer(byteOffset, desiredBufferSize, out var alignedWriteOffset, out var alignedBufferSize);
 
-								var hr = virtualization.WriteFileData(dataStreamId, writeBuffer, alignedWriteOffset, (uint)currentBufferSize);
-								if(hr != HResult.Ok)
-									return HResult.InternalError;
+					while(alignedWriteOffset < (ulong)file.Length) {
+						writeBuffer.Stream.Seek(0, SeekOrigin.Begin);
+						var currentBufferSize = Math.Min(desiredBufferSize, (ulong)file.Length - alignedWriteOffset);
+						var buffer = new byte[currentBufferSize];
+						reader.Read(buffer, 0, (int)currentBufferSize);
+						writeBuffer.Stream.Write(buffer, 0, (int)currentBufferSize);
 
-								alignedWriteOffset += (ulong)currentBufferSize;
-							}
-						}
+						var hr = virtualization.WriteFileData(dataStreamId, writeBuffer, alignedWriteOffset, (uint)currentBufferSize);
+						if(hr != HResult.Ok)
+							return HResult.InternalError;
+
+						alignedWriteOffset += currentBufferSize;
 					}
 
 					return HResult.Ok;
