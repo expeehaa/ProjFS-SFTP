@@ -44,7 +44,7 @@ namespace ProjFS_SFTP {
 		}
 
 		public bool StartProjecting() {
-			_requiredCallbacks = new RequiredCallbacks(this, _virtInstance, _sftpClient);
+			_requiredCallbacks = new RequiredCallbacks(_virtInstance, _sftpClient);
 			_virtInstance.OnQueryFileName = _requiredCallbacks.QueryFilenameCallback;
 			var hr = _virtInstance.StartVirtualizing(_requiredCallbacks);
 			if(hr == HResult.Ok)

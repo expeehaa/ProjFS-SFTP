@@ -9,13 +9,11 @@ using System.Linq;
 
 namespace ProjFS_SFTP {
 	public class RequiredCallbacks : IRequiredCallbacks {
-		private readonly FileProvider _fileProvider;
 		private readonly VirtualizationInstance _virtInstance;
 		private readonly SftpClient _sftpClient;
 		private readonly ConcurrentDictionary<Guid, IEnumerator<SftpFile>> _activeEnumerations = new ConcurrentDictionary<Guid, IEnumerator<SftpFile>>();
 
-		public RequiredCallbacks(FileProvider provider, VirtualizationInstance virtualization, SftpClient client) {
-			_fileProvider = provider;
+		public RequiredCallbacks(VirtualizationInstance virtualization, SftpClient client) {
 			_virtInstance = virtualization;
 			_sftpClient = client;
 		}
