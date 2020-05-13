@@ -12,7 +12,7 @@ namespace ProjFS_SFTP {
 		private readonly FileProvider _fileProvider;
 		private readonly VirtualizationInstance _virtInstance;
 		private readonly SftpClient _sftpClient;
-		private ConcurrentDictionary<Guid, IEnumerator<SftpFile>> _activeEnumerations = new ConcurrentDictionary<Guid, IEnumerator<SftpFile>>();
+		private readonly ConcurrentDictionary<Guid, IEnumerator<SftpFile>> _activeEnumerations = new ConcurrentDictionary<Guid, IEnumerator<SftpFile>>();
 
 		public RequiredCallbacks(FileProvider provider, VirtualizationInstance virtualization, SftpClient client) {
 			_fileProvider = provider;
