@@ -57,10 +57,9 @@ namespace ProjFS_SFTP {
 		}
 
 		public HResult GetFileDataCallback(int commandId, string relativePath, ulong byteOffset, uint length, Guid dataStreamId, byte[] contentId, byte[] providerId, uint triggeringProcessId, string triggeringProcessImageFileName) {
-			if(string.IsNullOrWhiteSpace(relativePath)) {
-				return HResult.Ok;
-			} else {
+			if(!string.IsNullOrWhiteSpace(relativePath)) {
 				var fullPath = GetFullPath(relativePath);
+
 				if(_sftpClient.Exists(fullPath)) {
 					var file = _sftpClient.Get(fullPath);
 					uint desiredBufferSize = (uint)Math.Min(64*1024, file.Length);
@@ -86,6 +85,8 @@ namespace ProjFS_SFTP {
 				} else {
 					return HResult.FileNotFound;
 				}
+			} else {
+				return HResult.Ok;
 			}
 		}
 
