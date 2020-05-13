@@ -11,27 +11,27 @@ namespace ProjFS_SFTP {
 		public DirectoryInfo VirtualizationDirectory { get; }
 		public string SftpRootPath { get; private set; }
 
-		private SftpClient SftpClient { get; }
+		private readonly SftpClient _sftpClient;
 		private VirtualizationInstance _virtInstance;
 		private RequiredCallbacks _requiredCallbacks;
 
 		public FileProvider(ConnectionInfo conInfo, DirectoryInfo virtualizationDir) {
 			ConnectionInfo = conInfo;
 			VirtualizationDirectory = virtualizationDir;
-			SftpClient = new SftpClient(ConnectionInfo);
+			_sftpClient = new SftpClient(ConnectionInfo);
 		}
 
 		public bool InitProjection() {
 			Stop();
 
 			try {
-				SftpClient.Connect();
+				_sftpClient.Connect();
 			} catch(Exception e) {
 				MessageBox.Show($"{e.Message}\n{e.StackTrace}", "Failed to connect to sftp server");
 				return false;
 			}
 
-			SftpRootPath = SftpClient.WorkingDirectory;
+			SftpRootPath = _sftpClient.WorkingDirectory;
 
 			try {
 				_virtInstance = new VirtualizationInstance(VirtualizationDirectory.FullName, 0, 0, false, new NotificationMapping[0]);
@@ -44,7 +44,7 @@ namespace ProjFS_SFTP {
 		}
 
 		public bool StartProjecting() {
-			_requiredCallbacks = new RequiredCallbacks(this, _virtInstance, SftpClient);
+			_requiredCallbacks = new RequiredCallbacks(this, _virtInstance, _sftpClient);
 			_virtInstance.OnQueryFileName = _requiredCallbacks.QueryFilenameCallback;
 			var hr = _virtInstance.StartVirtualizing(_requiredCallbacks);
 			if(hr == HResult.Ok)
@@ -53,8 +53,8 @@ namespace ProjFS_SFTP {
 		}
 
 		public void Stop() {
-			if(!(SftpClient is null) && SftpClient.IsConnected)
-				SftpClient.Disconnect();
+			if(!(_sftpClient is null) && _sftpClient.IsConnected)
+				_sftpClient.Disconnect();
 			if(!(_virtInstance is null))
 				try { _virtInstance.StopVirtualizing(); } catch { }
 
@@ -64,8 +64,8 @@ namespace ProjFS_SFTP {
 		}
 
 		public void Dispose() {
-			if(!(SftpClient is null))
-				SftpClient.Dispose();
+			if(!(_sftpClient is null))
+				_sftpClient.Dispose();
 		}
 	}
 }
