@@ -56,7 +56,7 @@ namespace ProjFS_SFTP {
 			if(!(SftpClient is null) && SftpClient.IsConnected)
 				SftpClient.Disconnect();
 			if(!(virtualization is null))
-				try { virtualization.StopVirtualizing(); } catch {}
+				try { virtualization.StopVirtualizing(); } catch { }
 
 			VirtualizationDirectory.Refresh();
 			if(VirtualizationDirectory.Exists)
