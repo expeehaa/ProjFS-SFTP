@@ -14,7 +14,11 @@ namespace ProjFS_SFTP {
 			var username = boxUsername.Text;
 			var password = boxPassword.Password;
 
-			FileProviderManager.CreateFileProvider(hostname, username, password);
+			if(!int.TryParse(boxPort.Text, out var port)) {
+				port = 22;
+			}
+
+			FileProviderManager.CreateFileProvider(hostname, username, password, port);
 		}
 	}
 }

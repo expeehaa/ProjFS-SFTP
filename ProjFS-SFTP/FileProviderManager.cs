@@ -14,7 +14,7 @@ namespace ProjFS_SFTP {
 		private static readonly ConcurrentDictionary<string, FileProvider> openConnections = new ConcurrentDictionary<string, FileProvider>();
 		private static readonly List<string> openInitiations = new List<string>();
 
-		public static bool CreateFileProvider(string hostname, string username, string password) {
+		public static bool CreateFileProvider(string hostname, string username, string password, int port = 22) {
 			var hash = CreateStringHash(hostname, username);
 			if(openInitiations.Contains(hash)) {
 				MessageBox.Show($"Connection to {username}@{hostname} is already initializing!");
@@ -30,7 +30,7 @@ namespace ProjFS_SFTP {
 
 			ConnectionInfo conInfo;
 			try {
-				conInfo = new ConnectionInfo(hostname, username, new PasswordAuthenticationMethod(username, password));
+				conInfo = new ConnectionInfo(hostname, port, username, new PasswordAuthenticationMethod(username, password));
 			} catch(Exception ex) {
 				MessageBox.Show($"{ex.Message}\n{ex.StackTrace}", "Failed to create connection");
 				return false;
